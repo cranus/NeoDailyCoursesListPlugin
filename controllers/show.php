@@ -11,9 +11,9 @@ class ShowController extends ApplicationController {
 		foreach(words('sem_tree_id sem_class') as $p){
 		    if (Request::get($this->plugin->me . '_' . $p) !== null ) {
 			    $this->$p = Request::get($this->plugin->me . '_' . $p);
-			    $GLOBALS['user']->user_vars[$this->plugin->me . '_' . $p] = $this->$p;
+			    //$GLOBALS['user']->user_vars[$this->plugin->me . '_' . $p] = $this->$p;
 			} else {
-			    $this->$p = $GLOBALS['user']->user_vars[$this->plugin->me . '_' . $p];
+			    //$this->$p = $GLOBALS['user']->user_vars[$this->plugin->me . '_' . $p];
 			}
 			UrlHelper::addLinkParam($this->plugin->me . '_' . $p, $this->$p);
 		}
@@ -45,6 +45,11 @@ class ShowController extends ApplicationController {
 			if($tree->hasKids($item)){
 				foreach($tree->getKids($item) as $subitem){
 					$sem_tree_options[] = array('name' => my_substr($tree->getShortPath($subitem),0,100), 'value' => $subitem );
+					if($tree->hasKids($subitem)){
+						foreach($tree->getKids($subitem) as $subsubitem){
+							$sem_tree_options[] = array('name' => my_substr($tree->getShortPath($subsubitem),0,100), 'value' => $subsubitem );
+						}
+					}
 				}
 			}
 		}
