@@ -101,6 +101,23 @@ class ShowController extends ApplicationController {
 			$filter[] = "seminare.visible=1";
 		}
 		$ret = array();
+			//NEO EDIT Start
+		$query = "SELECT SQL_CACHE DISTINCT ex_termine.*, seminare.Seminar_id as seminar_id, seminare.Name as name,
+				(SELECT GROUP_CONCAT(".$GLOBALS['_fullname_sql']['no_title_short']." SEPARATOR '; ') FROM seminar_user INNER JOIN auth_user_md5 USING(user_id) WHERE seminar_user.seminar_id=seminare.Seminar_id AND seminar_user.status='dozent' ORDER BY position) as dozenten
+				" .
+			($trp ? ",(SELECT GROUP_CONCAT(".$GLOBALS['_fullname_sql']['no_title_short']." SEPARATOR '; ') FROM termin_related_persons INNER JOIN auth_user_md5 USING(user_id) WHERE ex_termine.termin_id=termin_related_persons.range_id) as dozenten_termin" : "")
+			. " FROM ex_termine
+				INNER JOIN seminare ON ex_termine.range_id=seminare.Seminar_id
+				LEFT JOIN seminar_sem_tree ON seminar_sem_tree.seminar_id = seminare.Seminar_id
+				WHERE " . join(" AND ", $filter) . " ORDER BY ex_termine.date ASC, /*ex_termine.end_time DESC,*/ seminare.Name DESC";
+		echo $query; //LEFT JOIN resources_objects USING(resource_id) LEFT JOIN resources_assign ON assign_user_id=termin_id
+		foreach(DBManager::get()->query($query)->fetchAll(PDO::FETCH_ASSOC) as $one) {
+			$one['raum'] = "Ausfall / cancelled";
+			$ret[] = $one;
+		}
+			//NEO EDIT Ende
+
+
 		$query = "SELECT SQL_CACHE DISTINCT resources_objects.name as ro_raum,termine.*, seminare.Seminar_id as seminar_id, seminare.Name as name,
 				(SELECT GROUP_CONCAT(".$GLOBALS['_fullname_sql']['no_title_short']." SEPARATOR '; ') FROM seminar_user INNER JOIN auth_user_md5 USING(user_id) WHERE seminar_user.seminar_id=seminare.Seminar_id AND seminar_user.status='dozent' ORDER BY position) as dozenten
 				" .
@@ -111,6 +128,7 @@ class ShowController extends ApplicationController {
 				LEFT JOIN resources_objects USING(resource_id)
 				LEFT JOIN seminar_sem_tree ON seminar_sem_tree.seminar_id = seminare.Seminar_id
 				WHERE " . join(" AND ", $filter) . " ORDER BY termine.date ASC, /*termine.end_time DESC,*/ seminare.Name DESC";
+		echo $query;
 		foreach(DBManager::get()->query($query)->fetchAll(PDO::FETCH_ASSOC) as $one) {
 		    if ($one['ro_raum']) {
 			    $raum = $one['ro_raum'];
